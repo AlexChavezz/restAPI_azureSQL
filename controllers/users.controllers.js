@@ -1,38 +1,38 @@
 const connection = require('../database/dbConnection');
 const { Request } = require('tedious');
 
-const excectQuery = (connection) => {
-    data = [];
-    const request = new Request('SELECT * FROM users', (error, rowCount) => {
-        if (error) {
-            console.log(error);
-        }
-        // console.log(rowCount)
-        request.on('row', (columns) => {
-            console.log(columns)
-        })
-
-
-    })
-    request.on("requestCompleted", () => {
-        connection.close();
-        return data;
-    })
-    connection.execSql(request);
-}
-
-const getData = (request, response) => {
-    let data = [];
-    connection.connect();
+const getData = (req, res) => {
     connection.on('connect', (error) => {
         if (!error) {
-            excectQuery(connection);
-            // console.log(data)
+            let users = [];
+            const request = new Request("SELECT * FROM users", (error, rowCount, rows) => {
+                if (error) console.log(error);
+                else {
+                    console.log(rowCount, rows);
+                }
+            })
+            let user = {};
+            request.on("row", (columns) => {
+                users = [...users, columns];
+                // columns.forEach((column) => {
+                //     console.log(column);
+                // })
+            })
+            request.on('requestCompleted', () => {
+                console.log("Request Finished");
+                console.table(users);
+                res.json(users);
+            })
+            connection.execSql(request);
         } else {
             console.log(`Error: ${error}`);
         }
     })
-    response.json(data)
+    connection.connect();
+}
+
+const inserData = (req, res) => {
+    const { name } = req.body;
 }
 
 
